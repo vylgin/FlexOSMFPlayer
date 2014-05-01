@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+               xmlns:s="library://ns.adobe.com/flex/spark"
+               xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="640" minHeight="360" xmlns:flexosmf="flexosmf.*"
+               creationComplete="init()"
+               backgroundAlpha="0"> <!-- backgroundAlpha="0" - для полноэкранного режима -->
+
+    <fx:Declarations>
+        <!-- Place non-visual elements (e.g., services, value objects) here -->
+    </fx:Declarations>
+
+    <fx:Script>
+        <![CDATA[
+        import org.osmf.events.TimeEvent;
+
+        private const RTMP:String = "rtmp://cp67126.edgefcs.net/ondemand/mediapm/strobe/content/test/SpaceAloneHD_sounas_640_500_short";
+        private const HTTP:String = "http://mediapm.edgesuite.net/osmf/content/test/manifest-files/dynamic_Streaming.f4m";
+
+        [Bindable]
+        private var currentTime:Number;
+        [Bindable]
+        private var duration:Number;
+
+        private function init():void {
+            progressBar.addEventListener(MouseEvent.CLICK, videoDisplay.onSeek)
+        }
+
+        private function playPauseEvent(event:MouseEvent):void {
+            if (event.target.selected) {
+                videoDisplay.pause();
+                playPauseButton.label = "Play";
+            } else {
+                videoDisplay.play();
+                playPauseButton.label = "Pause";
+            }
+        }
+
+        private function stop():void {
+            videoDisplay.stop();
+            playPauseButton.label = "Play";
+        }
+
+        private function videoDurationChangeHandler(event:TimeEvent):void {
+            duration = event.time;
+        }
+
+        private function videoTimeChangeHandler(event:TimeEvent):void {
+            currentTime = event.time;
+            progressBar.setProgress(int(currentTime), int(duration));
+        }
+
+        private function videoCompleteHandler(event:TimeEvent):void {
+            //TODO: Выяснить, почему не срабатывает событие.
+            playPauseButton.label = "Play";
+            playPositionLabel.text = "00:00 / 00:00"
+            videoDisplay.screenState(StageDisplayState.NORMAL);
+            fullScreenButton.label = "Full Screen";
+        }
+
+        private function fullScreen(event:MouseEvent):void {
+            if (event.target.selected) {
+                videoDisplay.screenState(StageDisplayState.FULL_SCREEN);
+                fullScreenButton.label = "Normal Screen";
+            } else {
+                videoDisplay.screenState(StageDisplayState.NORMAL);
+                fullScreenButton.label = "Full Screen";
+            }
+        }
+        ]]>
+    </fx:Script>
+
+    <flexosmf:VideoDisplay
+            id = "videoDisplay"
+            source = "{RTMP}"
+            durationChange = "videoDurationChangeHandler(event)"
+            currentTimeChange = "videoTimeChangeHandler(event)"
+            videoComplete = "videoCompleteHandler(event)"/>
+
+    <s:HGroup>
+        <s:ToggleButton
+                id = "playPauseButton"
+                label = "Pause"
+                click = "playPauseEvent(event)"/>
+
+        <s:Button
+                label = "Stop"
+                click = "stop()"/>
+
+        <mx:ProgressBar
+                id = "progressBar"
+                label = ""
+                trackHeight = "16"
+                minimum = "0"
+                maximum = "{int(duration)}"
+                mode = "manual"/>
+
+        <s:Label
+                id = "playPositionLabel"
+                text = "Time: {VideoDisplay.timeFormat(currentTime) + ' / ' + VideoDisplay.timeFormat(duration)}"
+                paddingTop = "5"
+                color = "white"
+                backgroundColor = "0xa9a9a9"
+                backgroundAlpha = "0.5"/>
+
+        <s:ToggleButton
+                id = "fullScreenButton"
+                label = "Full Screen"
+                click = "fullScreen(event)"/>
+
+    </s:HGroup>
+
+</s:Application>
