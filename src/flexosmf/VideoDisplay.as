@@ -32,15 +32,6 @@ public class VideoDisplay extends UIComponent {
         minWidth = minHeight = 5;
     }
 
-    public static function timeFormat(time:int):String {
-        var minutes:int = time / 60;
-        var seconds:int = time % 60;
-        var min:String = minutes < 10 ? "0" + minutes : "" + minutes;
-        var sec:String = seconds < 10 ? "0" + seconds : "" + seconds;
-
-        return min + ":" + sec;
-    }
-
     override protected function createChildren() :void {
         super.createChildren();
 
@@ -125,9 +116,8 @@ public class VideoDisplay extends UIComponent {
         _source = value;
     }
 
-
-    public function get mediaPlayer():MediaPlayer {
-        return _mediaPlayer;
+    public function set volume(volume:Number) {
+        _mediaPlayer.volume = volume
     }
 
     private function videoDurationChangeHandler(event:TimeEvent):void {
@@ -140,6 +130,15 @@ public class VideoDisplay extends UIComponent {
 
     private function videoCompleteHandler(event:TimeEvent):void {
         dispatchEvent(event); //TODO: Выяснить, почему не отправляется событие в поток событий
+    }
+
+    public static function timeFormat(time:int):String {
+        var minutes:int = time / 60;
+        var seconds:int = time % 60;
+        var min:String = minutes < 10 ? "0" + minutes : "" + minutes;
+        var sec:String = seconds < 10 ? "0" + seconds : "" + seconds;
+
+        return min + ":" + sec;
     }
 }
 }

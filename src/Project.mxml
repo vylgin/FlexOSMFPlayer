@@ -66,17 +66,26 @@
                 fullScreenButton.label = "Full Screen";
             }
         }
+
+        private function volume(volume:Number) {
+            videoDisplay.volume = volume / 100;
+        }
+
+        private function formatDataTip(item:Number):String {
+            return int(item) + "%";
+        }
         ]]>
     </fx:Script>
 
     <flexosmf:VideoDisplay
             id = "videoDisplay"
-            source = "{RTMP}"
+            source = "{HTTP}"
             durationChange = "videoDurationChangeHandler(event)"
             currentTimeChange = "videoTimeChangeHandler(event)"
             videoComplete = "videoCompleteHandler(event)"/>
 
-    <s:HGroup>
+    <s:HGroup
+            paddingTop="5">
         <s:ToggleButton
                 id = "playPauseButton"
                 label = "Pause"
@@ -86,26 +95,57 @@
                 label = "Stop"
                 click = "stop()"/>
 
-        <mx:ProgressBar
-                id = "progressBar"
-                label = ""
-                trackHeight = "16"
-                minimum = "0"
-                maximum = "{int(duration)}"
-                mode = "manual"/>
-
-        <s:Label
-                id = "playPositionLabel"
-                text = "Time: {VideoDisplay.timeFormat(currentTime) + ' / ' + VideoDisplay.timeFormat(duration)}"
-                paddingTop = "5"
-                color = "white"
-                backgroundColor = "0xa9a9a9"
-                backgroundAlpha = "0.5"/>
-
         <s:ToggleButton
                 id = "fullScreenButton"
                 label = "Full Screen"
                 click = "fullScreen(event)"/>
+
+        <mx:ProgressBar
+                y = "10"
+                id = "progressBar"
+                label = ""
+                trackHeight = "18"
+                minimum = "0"
+                maximum = "{int(duration)}"
+                mode = "manual"/>
+
+        <s:HGroup
+                paddingTop="3">
+
+            <s:Label
+                    id = "playPositionLabel"
+                    text = "Time: {VideoDisplay.timeFormat(currentTime) + ' / ' + VideoDisplay.timeFormat(duration)}"
+                    color = "white"
+                    backgroundColor = "0xa9a9a9"
+                    backgroundAlpha = "0.8"/>
+
+            <s:Label
+                    textAlign="center"
+                    text = "Volume:"
+                    color = "white"
+                    backgroundColor = "0xa9a9a9"
+                    backgroundAlpha = "0.8"/>
+
+            <s:HSlider
+                    id = "volumeSlider"
+                    minimum = "0"
+                    maximum = "100"
+                    value = "50"
+                    stepSize = "5"
+                    snapInterval = "5"
+                    liveDragging = "true"
+                    change = "volume(volumeSlider.value)"
+                    dataTipFormatFunction="formatDataTip"/>
+
+            <s:Label
+                    id = "volumeLabel"
+                    textAlign="center"
+                    text = "{int(volumeSlider.value)}%"
+                    color = "white"
+                    backgroundColor = "0xa9a9a9"
+                    backgroundAlpha = "0.8"/>
+
+        </s:HGroup>
 
     </s:HGroup>
 
