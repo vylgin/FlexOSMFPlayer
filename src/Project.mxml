@@ -11,6 +11,11 @@
 
     <fx:Script>
         <![CDATA[
+        import mx.controls.ToolTip;
+        import mx.core.IToolTip;
+        import mx.events.ToolTipEvent;
+        import mx.managers.ToolTipManager;
+
         import org.osmf.events.TimeEvent;
 
         private const RTMP:String = "rtmp://cp67126.edgefcs.net/ondemand/mediapm/strobe/content/test/SpaceAloneHD_sounas_640_500_short";
@@ -21,8 +26,30 @@
         [Bindable]
         private var duration:Number;
 
+        private var mouseOverTimeToolTip:IToolTip;
+
         private function init():void {
-            progressBar.addEventListener(MouseEvent.CLICK, videoDisplay.onSeek)
+            progressBar.addEventListener(MouseEvent.CLICK, videoDisplay.onSeek);
+            progressBar.addEventListener(MouseEvent.MOUSE_MOVE, showToolTipMouseMovie);
+            progressBar.addEventListener(MouseEvent.MOUSE_OUT, hideToolTipMouseMovie);
+        }
+
+        private function showToolTipMouseMovie(event:MouseEvent):void {
+            var mouseOverTime:Number = duration * (event.target.mouseX / event.target.width);
+
+            if (mouseOverTimeToolTip != null)
+                ToolTipManager.destroyToolTip(mouseOverTimeToolTip);
+
+            mouseOverTimeToolTip = ToolTipManager.createToolTip(
+                    timeFormat(mouseOverTime),
+                    event.target.mouseX, progressBar.y + 15);
+        }
+
+        private function hideToolTipMouseMovie(event:MouseEvent):void {
+            if (mouseOverTimeToolTip != null)
+                ToolTipManager.destroyToolTip(mouseOverTimeToolTip);
+
+            mouseOverTimeToolTip = null;
         }
 
         private function playPauseEvent(event:MouseEvent):void {
@@ -67,12 +94,21 @@
             }
         }
 
-        private function volume(volume:Number) {
+        private function volume(volume:Number):void {
             videoDisplay.volume = volume / 100;
         }
 
-        private function formatDataTip(item:Number):String {
+        private function volumeDataTipFormat(item:Number):String {
             return int(item) + "%";
+        }
+
+        private function timeFormat(time:int):String {
+            var minutes:int = time / 60;
+            var seconds:int = time % 60;
+            var min:String = minutes < 10 ? "0" + minutes : "" + minutes;
+            var sec:String = seconds < 10 ? "0" + seconds : "" + seconds;
+
+            return min + ":" + sec;
         }
         ]]>
     </fx:Script>
@@ -84,69 +120,80 @@
             currentTimeChange = "videoTimeChangeHandler(event)"
             videoComplete = "videoCompleteHandler(event)"/>
 
-    <s:HGroup
-            paddingTop="5">
-        <s:ToggleButton
-                id = "playPauseButton"
-                label = "Pause"
-                click = "playPauseEvent(event)"/>
-
-        <s:Button
-                label = "Stop"
-                click = "stop()"/>
-
-        <s:ToggleButton
-                id = "fullScreenButton"
-                label = "Full Screen"
-                click = "fullScreen(event)"/>
-
-        <mx:ProgressBar
-                y = "10"
-                id = "progressBar"
-                label = ""
-                trackHeight = "18"
-                minimum = "0"
-                maximum = "{int(duration)}"
-                mode = "manual"/>
+    <s:VGroup>
 
         <s:HGroup
-                paddingTop="3">
+                paddingTop="5">
+            <s:ToggleButton
+                    id = "playPauseButton"
+                    label = "Pause"
+                    click = "playPauseEvent(event)"/>
+
+            <s:Button
+                    label = "Stop"
+                    click = "stop()"/>
+
+            <s:ToggleButton
+                    id = "fullScreenButton"
+                    label = "Full Screen"
+                    click = "fullScreen(event)"/>
+
+            <s:HGroup
+                    paddingTop="3">
+
+                <s:Label
+                        textAlign="center"
+                        text = "Volume:"
+                        color = "white"
+                        backgroundColor = "0xa9a9a9"
+                        backgroundAlpha = "0.8"/>
+
+                <s:HSlider
+                        id = "volumeSlider"
+                        minimum = "0"
+                        maximum = "100"
+                        value = "50"
+                        stepSize = "5"
+                        snapInterval = "5"
+                        liveDragging = "true"
+                        change = "volume(volumeSlider.value)"
+                        dataTipFormatFunction="volumeDataTipFormat"/>
+
+                <s:Label
+                        id = "volumeLabel"
+                        textAlign="center"
+                        text = "{int(volumeSlider.value)}%"
+                        color = "white"
+                        backgroundColor = "0xa9a9a9"
+                        backgroundAlpha = "0.8"/>
+
+            </s:HGroup>
+
+        </s:HGroup>
+
+        <s:HGroup>
+
+            <mx:ProgressBar
+                    y = "10"
+                    width="400"
+                    id = "progressBar"
+                    label = ""
+                    trackHeight = "18"
+                    minimum = "0"
+                    maximum = "{int(duration)}"
+                    mode = "manual"/>
 
             <s:Label
                     id = "playPositionLabel"
-                    text = "Time: {VideoDisplay.timeFormat(currentTime) + ' / ' + VideoDisplay.timeFormat(duration)}"
-                    color = "white"
-                    backgroundColor = "0xa9a9a9"
-                    backgroundAlpha = "0.8"/>
-
-            <s:Label
+                    paddingTop="5"
                     textAlign="center"
-                    text = "Volume:"
-                    color = "white"
-                    backgroundColor = "0xa9a9a9"
-                    backgroundAlpha = "0.8"/>
-
-            <s:HSlider
-                    id = "volumeSlider"
-                    minimum = "0"
-                    maximum = "100"
-                    value = "50"
-                    stepSize = "5"
-                    snapInterval = "5"
-                    liveDragging = "true"
-                    change = "volume(volumeSlider.value)"
-                    dataTipFormatFunction="formatDataTip"/>
-
-            <s:Label
-                    id = "volumeLabel"
-                    textAlign="center"
-                    text = "{int(volumeSlider.value)}%"
+                    text = "Time: {timeFormat(currentTime) + ' / ' + timeFormat(duration)}"
                     color = "white"
                     backgroundColor = "0xa9a9a9"
                     backgroundAlpha = "0.8"/>
 
         </s:HGroup>
 
-    </s:HGroup>
+    </s:VGroup>
 
 </s:Application>

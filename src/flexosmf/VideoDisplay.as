@@ -112,11 +112,11 @@ public class VideoDisplay extends UIComponent {
         invalidateSize();
         invalidateDisplayList();
     }
-    public function set source(value:String) :void {
+    public function set source(value:String):void {
         _source = value;
     }
 
-    public function set volume(volume:Number) {
+    public function set volume(volume:Number):void {
         _mediaPlayer.volume = volume
     }
 
@@ -130,15 +130,6 @@ public class VideoDisplay extends UIComponent {
 
     private function videoCompleteHandler(event:TimeEvent):void {
         dispatchEvent(event); //TODO: Выяснить, почему не отправляется событие в поток событий
-    }
-
-    public static function timeFormat(time:int):String {
-        var minutes:int = time / 60;
-        var seconds:int = time % 60;
-        var min:String = minutes < 10 ? "0" + minutes : "" + minutes;
-        var sec:String = seconds < 10 ? "0" + seconds : "" + seconds;
-
-        return min + ":" + sec;
     }
 }
 }
