@@ -11,20 +11,30 @@
 
     <fx:Script>
         <![CDATA[
+        import mx.collections.ArrayCollection;
+        import mx.collections.ArrayList;
         import mx.controls.ToolTip;
         import mx.core.IToolTip;
         import mx.events.ToolTipEvent;
         import mx.managers.ToolTipManager;
 
+        import org.osmf.events.DynamicStreamEvent;
+        import org.osmf.events.PlayEvent;
+
         import org.osmf.events.TimeEvent;
 
-        private const RTMP:String = "rtmp://cp67126.edgefcs.net/ondemand/mediapm/strobe/content/test/SpaceAloneHD_sounas_640_500_short";
+        import spark.events.IndexChangeEvent;
+
         private const HTTP:String = "http://mediapm.edgesuite.net/osmf/content/test/manifest-files/dynamic_Streaming.f4m";
+        private const AUTO:String = "AUTO";
 
         [Bindable]
         private var currentTime:Number;
         [Bindable]
         private var duration:Number;
+
+        [Bindable]
+        private var streamDataProvider:ArrayList = new ArrayList();
 
         private var mouseOverTimeToolTip:IToolTip;
 
@@ -64,20 +74,28 @@
 
         private function stop():void {
             videoDisplay.stop();
+            videoDisplay.screenState(StageDisplayState.NORMAL);
             playPauseButton.label = "Play";
         }
 
-        private function videoDurationChangeHandler(event:TimeEvent):void {
+        private function videoDurationChange(event:TimeEvent):void {
             duration = event.time;
         }
 
-        private function videoTimeChangeHandler(event:TimeEvent):void {
+        private function videoTimeChange(event:TimeEvent):void {
             currentTime = event.time;
             progressBar.setProgress(int(currentTime), int(duration));
+
+            if (streamDataProvider.length < videoDisplay.numDynamicStreams) {
+                for (var i:int = 0; i <= videoDisplay.maxAllowedDynamicStreamIndex; i++) {
+                    streamDataProvider.addItem(videoDisplay.getBitrateForDynamicStreamIndex(i));
+                }
+                streamDataProvider.addItem(AUTO);
+            }
         }
 
-        private function videoCompleteHandler(event:TimeEvent):void {
-            //TODO: Выяснить, почему не срабатывает событие.
+        private function onVideoComplete(event:TimeEvent):void {
+            //TODO: Узнать, почему не срабатывает событие.
             playPauseButton.label = "Play";
             playPositionLabel.text = "00:00 / 00:00"
             videoDisplay.screenState(StageDisplayState.NORMAL);
@@ -110,15 +128,51 @@
 
             return min + ":" + sec;
         }
+
+        private function switchingChange(event:DynamicStreamEvent):void {
+            var requestMsg:String = "";
+            var showCurrentIndex:Boolean = false;
+
+            if (event.switching) {
+                requestMsg += "REQUESTING";
+            }
+            else {
+                if (videoDisplay.autoDynamicStreamSwitch) {
+                    requestMsg += AUTO;
+                }
+                showCurrentIndex = true;
+            }
+
+            requestOrAutoInfoLabel.text = requestMsg;
+
+            if (showCurrentIndex) {
+                var streamMsg1:String = "Current streaming index: " + videoDisplay.currentDynamicStreamIndex + " of " + videoDisplay.maxAllowedDynamicStreamIndex;
+
+                var streamMsg2:String = "Current bitrate = " + videoDisplay.getBitrateForDynamicStreamIndex(videoDisplay.currentDynamicStreamIndex) + "kbps";
+
+                changeStream.setSelectedIndex(videoDisplay.currentDynamicStreamIndex);
+            }
+        }
+
+        private function changeStreamChange(event:IndexChangeEvent):void {
+            var streamIndex:int = event.newIndex;
+            if (streamIndex <= videoDisplay.maxAllowedDynamicStreamIndex) {
+                videoDisplay.autoDynamicStreamSwitch = false;
+                videoDisplay.switchDynamicStreamIndex(streamIndex)
+            } else {
+                videoDisplay.autoDynamicStreamSwitch = true;
+            }
+        }
         ]]>
     </fx:Script>
 
     <flexosmf:VideoDisplay
             id = "videoDisplay"
-            source = "{HTTP}"
-            durationChange = "videoDurationChangeHandler(event)"
-            currentTimeChange = "videoTimeChangeHandler(event)"
-            videoComplete = "videoCompleteHandler(event)"/>
+            source= "{HTTP}"
+            durationChange = "videoDurationChange(event)"
+            currentTimeChange = "videoTimeChange(event)"
+            videoComplete = "onVideoComplete(event)"
+            switchingChange = "switchingChange(event)"/>
 
     <s:VGroup>
 
@@ -188,6 +242,21 @@
                     paddingTop="5"
                     textAlign="center"
                     text = "Time: {timeFormat(currentTime) + ' / ' + timeFormat(duration)}"
+                    color = "white"
+                    backgroundColor = "0xa9a9a9"
+                    backgroundAlpha = "0.8"/>
+
+            <s:DropDownList
+                    id = "changeStream"
+                    width="100"
+                    dataProvider="{streamDataProvider}"
+                    change="changeStreamChange(event)"/>
+
+            <s:Label
+                    id ="requestOrAutoInfoLabel"
+                    paddingTop="5"
+                    textAlign="center"
+                    text = ""
                     color = "white"
                     backgroundColor = "0xa9a9a9"
                     backgroundAlpha = "0.8"/>

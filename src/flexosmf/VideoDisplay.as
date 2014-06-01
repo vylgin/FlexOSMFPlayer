@@ -9,22 +9,28 @@ import mx.core.UIComponent;
 import org.osmf.containers.MediaContainer;
 import org.osmf.elements.VideoElement;
 import org.osmf.events.DisplayObjectEvent;
+import org.osmf.events.DynamicStreamEvent;
+import org.osmf.events.MediaPlayerStateChangeEvent;
+import org.osmf.events.PlayEvent;
 import org.osmf.events.TimeEvent;
 import org.osmf.media.DefaultMediaFactory;
 import org.osmf.media.MediaElement;
 import org.osmf.media.MediaFactory;
 import org.osmf.media.MediaPlayer;
 import org.osmf.media.URLResource;
+import org.osmf.traits.PlayState;
 
 [Event(name="durationChange", type="org.osmf.events.TimeEvent")]
 [Event(name="currentTimeChange", type="org.osmf.events.TimeEvent")]
 [Event(name="videoComplete", type="org.osmf.events.TimeEvent")]
+[Event(name="switchingChange", type="org.osmf.events.DynamicStreamEvent")]
 public class VideoDisplay extends UIComponent {
-    private var _mediaPlayer:MediaPlayer;
-    private var _container:MediaContainer;
-    private var _source:String;
-    private var _element:MediaElement;
-    private var _mediaFactory:DefaultMediaFactory;
+
+    private var mediaPlayer:MediaPlayer;
+    private var container:MediaContainer;
+    private var localSource:String;
+    private var element:MediaElement;
+    private var mediaFactory:DefaultMediaFactory;
 
     public function VideoDisplay() {
         super();
@@ -32,79 +38,80 @@ public class VideoDisplay extends UIComponent {
         minWidth = minHeight = 5;
     }
 
-    override protected function createChildren() :void {
+    override protected function createChildren():void {
         super.createChildren();
 
-        _mediaFactory = new DefaultMediaFactory();
+        mediaFactory = new DefaultMediaFactory();
 
-        _mediaPlayer = new MediaPlayer();
-        _mediaPlayer.addEventListener(DisplayObjectEvent.MEDIA_SIZE_CHANGE, onMediaSizeChange);
-        _mediaPlayer.addEventListener(TimeEvent.DURATION_CHANGE, videoDurationChangeHandler);
-        _mediaPlayer.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, videoTimeChangeHandler);
-        _mediaPlayer.addEventListener(TimeEvent.COMPLETE, videoCompleteHandler);
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.addEventListener(DisplayObjectEvent.MEDIA_SIZE_CHANGE, onMediaSizeChange);
+        mediaPlayer.addEventListener(TimeEvent.DURATION_CHANGE, videoDurationChange);
+        mediaPlayer.addEventListener(TimeEvent.CURRENT_TIME_CHANGE, videoTimeChange);
+        mediaPlayer.addEventListener(TimeEvent.COMPLETE, onVideoComplete);
+        mediaPlayer.addEventListener(DynamicStreamEvent.SWITCHING_CHANGE, onSwitchingChange);
 
-        _container = new MediaContainer();
+        container = new MediaContainer();
 
-        addChild(_container);
+        addChild(container);
 
-        if( _source ) {
+        if(localSource) {
             playMedia();
         }
     }
 
     public function onSeek(event:MouseEvent):void {
-        var seekTo:Number = _mediaPlayer.duration * (event.target.mouseX / event.target.width);
-        _mediaPlayer.seek(seekTo);
+        var seekTo:Number = mediaPlayer.duration * (event.target.mouseX / event.target.width);
+        mediaPlayer.seek(seekTo);
     }
 
     override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
         super.updateDisplayList(unscaledWidth, unscaledHeight);
 
-        if( _container ) {
-            _container.width = unscaledWidth;
-            _container.height = unscaledHeight;
+        if(container) {
+            container.width = unscaledWidth;
+            container.height = unscaledHeight;
         }
     }
 
     override protected function measure():void {
         super.measure();
 
-        measuredWidth = _mediaPlayer.mediaWidth;
-        measuredHeight = _mediaPlayer.mediaHeight;
+        measuredWidth = mediaPlayer.mediaWidth;
+        measuredHeight = mediaPlayer.mediaHeight;
         measuredMinWidth = measuredMinHeight = 5;
     }
 
     public function playMedia():void {
-        if(_mediaPlayer) {
-            if(_element) {
-                if(_container.containsMediaElement(_element)) {
-                    _container.removeMediaElement(_element);
+        if(mediaPlayer) {
+            if(element) {
+                if(container.containsMediaElement(element)) {
+                    container.removeMediaElement(element);
                 }
             }
-            _element = _mediaFactory.createMediaElement(new URLResource(_source));
-            _mediaPlayer.media = _element;
-            _container.addMediaElement(_element);
+            element = mediaFactory.createMediaElement(new URLResource(localSource));
+            mediaPlayer.media = element;
+            container.addMediaElement(element);
         }
     }
 
     public function play():void {
-        _mediaPlayer.play();
+        mediaPlayer.play();
     }
 
     public function pause():void {
-        _mediaPlayer.pause();
+        mediaPlayer.pause();
     }
 
     public function stop():void {
-        _mediaPlayer.stop();
-        _container.width = 0;
-        _container.height = 0;
+        mediaPlayer.stop();
+        container.width = 0;
+        container.height = 0;
     }
 
     public function screenState(stageDisplayState:String):void {
         stage.displayState = stageDisplayState;
-        _container.width = stage.stageWidth;
-        _container.height = stage.stageHeight;
+        container.width = stage.stageWidth;
+        container.height = stage.stageHeight;
     }
 
     protected function onMediaSizeChange(e:DisplayObjectEvent):void {
@@ -112,24 +119,60 @@ public class VideoDisplay extends UIComponent {
         invalidateSize();
         invalidateDisplayList();
     }
+
+
     public function set source(value:String):void {
-        _source = value;
+        localSource = value;
     }
 
     public function set volume(volume:Number):void {
-        _mediaPlayer.volume = volume
+        mediaPlayer.volume = volume
     }
 
-    private function videoDurationChangeHandler(event:TimeEvent):void {
+    public function set autoDynamicStreamSwitch(b : Boolean):void {
+        mediaPlayer.autoDynamicStreamSwitch = b;
+    }
+
+    public function get numDynamicStreams():int {
+        return mediaPlayer.numDynamicStreams;
+    }
+
+    public function get currentDynamicStreamIndex():int {
+        return mediaPlayer.currentDynamicStreamIndex;
+    }
+
+    public function get maxAllowedDynamicStreamIndex():int {
+        return mediaPlayer.maxAllowedDynamicStreamIndex;
+    }
+
+    public function get autoDynamicStreamSwitch():Boolean {
+        return mediaPlayer.autoDynamicStreamSwitch;
+    }
+
+    public function getBitrateForDynamicStreamIndex(dynamicStreamIntex:int):Number {
+        var bitrate:Number = mediaPlayer.getBitrateForDynamicStreamIndex(dynamicStreamIntex);
+        return bitrate;
+    }
+
+    public function switchDynamicStreamIndex(streamIndex:int):void {
+        mediaPlayer.switchDynamicStreamIndex(streamIndex);
+    }
+
+    private function onSwitchingChange(event:DynamicStreamEvent):void {
         dispatchEvent(event);
     }
 
-    private function videoTimeChangeHandler(event:TimeEvent):void {
+    private function videoDurationChange(event:TimeEvent):void {
         dispatchEvent(event);
     }
 
-    private function videoCompleteHandler(event:TimeEvent):void {
-        dispatchEvent(event); //TODO: Выяснить, почему не отправляется событие в поток событий
+    private function videoTimeChange(event:TimeEvent):void {
+        dispatchEvent(event);
+    }
+
+    private function onVideoComplete(event:TimeEvent):void {
+        //TODO: Узнать, почему не отправляется событие в поток событий
+        dispatchEvent(event);
     }
 }
 }
