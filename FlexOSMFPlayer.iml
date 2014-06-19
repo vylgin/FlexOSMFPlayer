@@ -2,7 +2,7 @@
 <module type="Flex" version="4">
   <component name="FlexBuildConfigurationManager" active="FlexOSMFPlayer">
     <configurations>
-      <configuration name="FlexOSMFPlayer" main-class="FlexOSMFPlayer" output-file="index.swf" output-folder="$MODULE_DIR$/out/production/Project" use-html-wrapper="true" wrapper-template-path="$MODULE_DIR$/html-template">
+      <configuration name="FlexOSMFPlayer" main-class="FlexOSMFPlayer" output-file="index.swf" output-folder="$MODULE_DIR$/out/production/FlexOSMFPlayer" use-html-wrapper="true" wrapper-template-path="$MODULE_DIR$/html-template">
         <dependencies target-player="12.0">
           <sdk name="flex" />
         </dependencies>

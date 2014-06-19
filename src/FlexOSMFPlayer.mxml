@@ -1,26 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
                xmlns:s="library://ns.adobe.com/flex/spark"
-               xmlns:mx="library://ns.adobe.com/flex/mx" minWidth="640" minHeight="360" xmlns:flexosmf="flexosmf.*"
+               xmlns:mx="library://ns.adobe.com/flex/mx"
+               minWidth="640"
+               minHeight="360"
+               xmlns:flexosmf="flexosmf.*"
                creationComplete="init()"
                backgroundAlpha="0"> <!-- backgroundAlpha="0" - для полноэкранного режима -->
 
-    <fx:Declarations>
-        <!-- Place non-visual elements (e.g., services, value objects) here -->
-    </fx:Declarations>
-
     <fx:Script>
         <![CDATA[
-        import mx.collections.ArrayCollection;
         import mx.collections.ArrayList;
-        import mx.controls.ToolTip;
         import mx.core.IToolTip;
-        import mx.events.ToolTipEvent;
         import mx.managers.ToolTipManager;
 
         import org.osmf.events.DynamicStreamEvent;
-        import org.osmf.events.PlayEvent;
-
         import org.osmf.events.TimeEvent;
 
         import spark.events.IndexChangeEvent;
@@ -52,7 +46,8 @@
 
             mouseOverTimeToolTip = ToolTipManager.createToolTip(
                     timeFormat(mouseOverTime),
-                    event.target.mouseX, progressBar.y + 15);
+                    event.target.mouseX,
+                            progressBar.y + 15);
         }
 
         private function hideToolTipMouseMovie(event:MouseEvent):void {
@@ -73,9 +68,9 @@
         }
 
         private function stop():void {
+            playPauseButton.label = "Play";
             videoDisplay.stop();
             videoDisplay.screenState(StageDisplayState.NORMAL);
-            playPauseButton.label = "Play";
         }
 
         private function videoDurationChange(event:TimeEvent):void {
@@ -178,6 +173,7 @@
 
         <s:HGroup
                 paddingTop="5">
+
             <s:ToggleButton
                     id = "playPauseButton"
                     label = "Pause"
