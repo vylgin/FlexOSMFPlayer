@@ -133,6 +133,10 @@ public class VideoDisplay extends UIComponent {
         mediaPlayer.autoDynamicStreamSwitch = b;
     }
 
+    public function get autoDynamicStreamSwitch():Boolean {
+        return mediaPlayer.autoDynamicStreamSwitch;
+    }
+
     public function get numDynamicStreams():int {
         return mediaPlayer.numDynamicStreams;
     }
@@ -143,10 +147,6 @@ public class VideoDisplay extends UIComponent {
 
     public function get maxAllowedDynamicStreamIndex():int {
         return mediaPlayer.maxAllowedDynamicStreamIndex;
-    }
-
-    public function get autoDynamicStreamSwitch():Boolean {
-        return mediaPlayer.autoDynamicStreamSwitch;
     }
 
     public function getBitrateForDynamicStreamIndex(dynamicStreamIntex:int):Number {

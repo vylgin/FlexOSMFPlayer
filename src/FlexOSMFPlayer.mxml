@@ -130,8 +130,7 @@
 
             if (event.switching) {
                 requestMsg += "REQUESTING";
-            }
-            else {
+            } else {
                 if (videoDisplay.autoDynamicStreamSwitch) {
                     requestMsg += AUTO;
                 }
@@ -141,10 +140,6 @@
             requestOrAutoInfoLabel.text = requestMsg;
 
             if (showCurrentIndex) {
-                var streamMsg1:String = "Current streaming index: " + videoDisplay.currentDynamicStreamIndex + " of " + videoDisplay.maxAllowedDynamicStreamIndex;
-
-                var streamMsg2:String = "Current bitrate = " + videoDisplay.getBitrateForDynamicStreamIndex(videoDisplay.currentDynamicStreamIndex) + "kbps";
-
                 changeStream.setSelectedIndex(videoDisplay.currentDynamicStreamIndex);
             }
         }
